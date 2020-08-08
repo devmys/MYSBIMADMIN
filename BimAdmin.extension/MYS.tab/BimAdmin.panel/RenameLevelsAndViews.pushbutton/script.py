@@ -45,7 +45,7 @@ def collect_level_info():
         else:
             levels_below_gf.append([name,elevation])
     return levels_below_gf,gf,levels_above_gf
-
+#------------------------------
 def rename_above_gf_levels(levels):
     sorted_levels = sorted(levels , key = lambda x: x[1])
     level_names = []
@@ -53,7 +53,7 @@ def rename_above_gf_levels(levels):
         newLevel = 'F-' + str(index).zfill(2)
         level_names.append([level[0],newLevel])
     return level_names
-
+#------------------------------
 def rename_below_gf_levels(levels):
     sorted_levels = sorted(levels , key = lambda x: x[1])
     sorted_levels.reverse()
@@ -77,6 +77,15 @@ def get_mez_levels(levels):
     res = forms.SelectFromList.show(ops, multiselect=True, name_attr='Name',  button_name='Select Mezzanine/Gallery Levels') 
     return list(res)
 #------------------------------
+def LevelRename(newNames):
+    for x in newNames:
+        print ("{} is going to change to \t{}\t\t at Elevation {}".format(x[0].Name,x[1],round(jt_FromIntUnits(x[0].Elevation),4)))
+    t = Transaction(doc,"Renaming Levels")
+    t.Start()
+    for x in newNames:
+        x[0].Name = x[1]
+    t.Commit()
+#------------------------------
 def select_views_with_associated_levels ():
     views_collector = DB.FilteredElementCollector(doc)
     views_collector.OfCategory(DB.BuiltInCategory.OST_Views)
@@ -85,7 +94,6 @@ def select_views_with_associated_levels ():
     view_with_levels = []
     for v in views_list:
         if (v.LookupParameter('Associated Level') != None ):
-          #  print(v.LookupParameter('Associated Level').AsString())
             view_with_levels.append([v , v.LookupParameter('Associated Level').AsString()])
     return view_with_levels
 #------------------------------
@@ -124,12 +132,14 @@ def mainfunction():
         else :
                 index +=1
                 newNames.append([x,'F-'+ str(index).zfill(2)])
+    LevelRename(newNames)
+    oldNewNames = {}
     for x in newNames:
-        print ("{} is going to change to \t{}\t\t at Elevation {}".format(x[0].Name,x[1],round(jt_FromIntUnits(x[0].Elevation),4)))
+        oldNewNames[x[0].Name] = x[1]
     views = select_views_with_associated_levels()
     for x in views:
-        # print("{} is associated with{}".format(x[0].Name , x[1]))
-        if (x[0].Name.__contains__(x[1])):
-            print("will be changed to {}".format(x[0].Name.replace( x[1] , '_')))   
+        for k in oldNewNames.keys():
+            if x[1].find(k) > -1:
+                print "{} found at {}".format(k,x[0].Name)
 # -----------------------------
 mainfunction()
