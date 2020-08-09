@@ -97,6 +97,24 @@ def select_views_with_associated_levels ():
             view_with_levels.append([v , v.LookupParameter('Associated Level').AsString()])
     return view_with_levels
 #------------------------------
+def group_view_by_type(lo_views):
+    returnData = {}
+    lo_vt = map(lambda x: x.__str__(), list(set(map (lambda x: x.ViewType ,lo_views))))
+    for x in lo_vt:
+        returnData[x] = []
+    for v in lo_views:
+         returnData[v.ViewType.__str__()].append(v)
+    return returnData
+#------------------------------
+def group_view_by_template(lo_views):
+    returnData = {}
+    lo_vtm = map(lambda x: x.__str__(), list(set(map (lambda x: x.ViewTemplateId ,lo_views))))
+    for x in lo_vtm:
+        returnData[x] = []
+    for v in lo_views:
+        returnData[v.ViewTemplateId.__str__()].append(v)
+    return returnData
+#------------------------------
 def mainfunction():
     levels  = collect_level_elements()
     skip = get_levels_to_skip(levels)
@@ -132,14 +150,30 @@ def mainfunction():
         else :
                 index +=1
                 newNames.append([x,'F-'+ str(index).zfill(2)])
-    LevelRename(newNames)
+    #LevelRename(newNames)
     oldNewNames = {}
     for x in newNames:
         oldNewNames[x[0].Name] = x[1]
     views = select_views_with_associated_levels()
-    for x in views:
-        for k in oldNewNames.keys():
-            if x[1].find(k) > -1:
-                print "{} found at {}".format(k,x[0].Name)
+    lo_vbt = group_view_by_type(map(lambda x: x[0] , views))
+#    for x in lo_vbt.keys():
+ #       print (x)
+  #      for v in lo_vbt[x]:
+   #         print '\t\t' + v.Name """
+    lo_vbtm = group_view_by_template(map(lambda x: x[0] , views))
+    for x in lo_vbtm.keys():
+        if x != -1:
+            print (doc.GetElement(DB.ElementId(int(x))).Name)
+            for v in lo_vbtm[x]:
+                print '\t\t' + v.Name
+        else:
+            print "No Template"
+            for v in lo_vbtm[x]:
+                print '\t\t' + v.Name
+    # for x in views:
+        # for k in oldNewNames.keys():
+            # if x[1].find(k) > -1:
+                # print "{} found at {}".format(k,x[0].Name)
+
 # -----------------------------
 mainfunction()
