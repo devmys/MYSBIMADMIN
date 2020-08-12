@@ -30,8 +30,8 @@ print(res)
 levels = collect_levels()
 print(levels)
 # for timing -------------------------------------------------------------------
-endtime = timer.get_time()
-print(endtime)
+#endtime = timer.get_time()
+#print(endtime)
 # ------------------------------------------------------------------------------
 
 
