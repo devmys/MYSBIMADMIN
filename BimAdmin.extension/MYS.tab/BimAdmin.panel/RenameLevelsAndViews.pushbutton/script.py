@@ -115,30 +115,22 @@ def group_view_by_template(lo_views):
         returnData[v.ViewTemplateId.__str__()].append(v)
     return returnData
 #------------------------------
-def mainfunction():
+def get_levels_newNames():
     levels  = collect_level_elements()
     skip = get_levels_to_skip(levels)
-    print (dir(levels))
-    for x in skip:
-        levels.remove(x)
     galeries = get_mez_levels(levels)
     levels.sort(key = lambda x :  round(jt_FromIntUnits(x.Elevation),4))
-    print('--------------sorted----------------')
     gfIndex = -1
     for i,level in enumerate(levels):
         if round(jt_FromIntUnits(level.Elevation) , 3)  == 0.0:
-            gfIndex = i 
-    print('--------------gf----------------')
-    gf = levels[gfIndex]
-    print('Ground Floor is {}  '.format(gf.Name))
+            gfIndex = i
     number_of_below_ground = gfIndex
-    index = 0
     newNames = []
+    index = 0
     while number_of_below_ground > 0:
         newNames.append([levels[index] , 'B-' + str(number_of_below_ground).zfill(2)])
         number_of_below_ground -= 1
         index +=1
-    #------------------------------
     newNames.append([levels[gfIndex],'GF'])
     index = 0
     for x in levels[gfIndex+1:]:
@@ -150,19 +142,19 @@ def mainfunction():
         else :
                 index +=1
                 newNames.append([x,'F-'+ str(index).zfill(2)])
-    #LevelRename(newNames)
+    return newNames
+#------------------------------
+#------------------------------
+
+def mainfunction():
+    newNames = get_levels_newNames()
     oldNewNames = {}
     for x in newNames:
         oldNewNames[x[0].Name] = x[1]
     views = select_views_with_associated_levels()
-    lo_vbt = group_view_by_type(map(lambda x: x[0] , views))
-#    for x in lo_vbt.keys():
- #       print (x)
-  #      for v in lo_vbt[x]:
-   #         print '\t\t' + v.Name """
     lo_vbtm = group_view_by_template(map(lambda x: x[0] , views))
     for x in lo_vbtm.keys():
-        if x != -1:
+        if int(x) != -1:
             print (doc.GetElement(DB.ElementId(int(x))).Name)
             for v in lo_vbtm[x]:
                 print '\t\t' + v.Name
@@ -170,10 +162,13 @@ def mainfunction():
             print "No Template"
             for v in lo_vbtm[x]:
                 print '\t\t' + v.Name
-    # for x in views:
-        # for k in oldNewNames.keys():
-            # if x[1].find(k) > -1:
-                # print "{} found at {}".format(k,x[0].Name)
+    print '======================================'
+    print '======================================'
+    print '======================================'
+    for x in views:
+        for k in oldNewNames.keys():
+            if x[1].find(k) > -1:
+                print "{} found at {} and is going to be{}".format(k,x[0].Name, x[0].Name.replace(k,oldNewNames[k]))
 
 # -----------------------------
 mainfunction()
