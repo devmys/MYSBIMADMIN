@@ -18,19 +18,18 @@ from pyrevit import forms
 #        >>> res = forms.SelectFromList.show(ops, multiselect=Falsename_attr='Name',
 #ops = {'Sheet Set A': ['viewsheet1', 'viewsheet2', 'viewsheet3'],'Sheet Set B': ['viewsheet4', 'viewsheet5', 'viewsheet6']}
 #res = forms.SelectFromList.show(ops, multiselect=True, group_selector_title='Sheet Sets',button_name='Select Sheets')
-def collect_level_elements():
-    levels_collector = DB.FilteredElementCollector(doc)
-    levels_collector.OfCategory(DB.BuiltInCategory.OST_Levels)
-    levels_collector.WhereElementIsNotElementType()
-    return_elements =list(levels_collector.ToElements())
-    return return_elements
-
-levels = collect_levels()
-print(levels)
+#print(res)
+#levels = collect_levels()
+#print(levels)
 # for timing -------------------------------------------------------------------
 #endtime = timer.get_time()
 #print(endtime)
 # ------------------------------------------------------------------------------
-
+if __shiftclick__:
+    basefolder = op.expandvars('%userprofile%\\desktop')
+else:
+    basefolder = forms.pick_folder()
+#
+print(basefolder)
 
 
