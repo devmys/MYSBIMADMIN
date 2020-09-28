@@ -3,6 +3,11 @@ from Autodesk.Revit.DB import *
 # ------------------------------
 from pyrevit import forms
 doc = __revit__.ActiveUIDocument.Document
+
+
+import sys
+
+from rpw.ui.forms.flexform import FlexForm, Label, ComboBox, TextBox, Button
 #------------------------------
 def toInternalUnits(val):
 	docUnitLength = Document.GetUnits(doc).GetFormatOptions(UnitType.UT_Length).DisplayUnits
@@ -115,6 +120,41 @@ def group_view_by_template(lo_views):
         returnData[v.ViewTemplateId.__str__()].append(v)
     return returnData
 #------------------------------
+def get_viewName_prefix_byTemplate(templates):
+    templatePrefix = []
+    for template in templates:
+        if int(template) != -1:
+            vtn = (doc.GetElement(DB.ElementId(int(template))).Name)
+            templatePrefix.append(vtn.replace(" ","-"))
+        else :
+            templatePrefix.append("No-Template")
+    
+    res = MultipleTextInput("Add view prefix according to template :", templatePrefix )
+    return list(res)
+#------------------------------
+def MultipleTextInput(title, buttonNamesValues , default=None, description=None, sort=True, exit_on_close=True ,  ):
+  components = []
+  rvalues = []
+  for b in buttonNamesValues:
+    
+    label = Label("Template_"+ b)
+    textbox = TextBox(b, default=b )
+    components.append(label)
+    components.append(textbox)
+    rvalues.append(b)
+  components.append(Button('Select'))
+  form = FlexForm(title, components)
+  ok = form.show()
+  if ok:
+    a =  []
+    for x in buttonNamesValues:
+      a.append([x,form.values[x]])
+    return a
+  if exit_on_close:
+    sys.exit()
+
+#------------------------------
+
 def get_levels_newNames():
     levels  = collect_level_elements()
     skip = get_levels_to_skip(levels)
@@ -153,22 +193,26 @@ def mainfunction():
         oldNewNames[x[0].Name] = x[1]
     views = select_views_with_associated_levels()
     lo_vbtm = group_view_by_template(map(lambda x: x[0] , views))
-    for x in lo_vbtm.keys():
-        if int(x) != -1:
-            print (doc.GetElement(DB.ElementId(int(x))).Name)
-            for v in lo_vbtm[x]:
-                print '\t\t' + v.Name
-        else:
-            print "No Template"
-            for v in lo_vbtm[x]:
-                print '\t\t' + v.Name
+    
+    #for x in lo_vbtm.keys():
+    #    if int(x) != -1:
+    #        print (doc.GetElement(DB.ElementId(int(x))).Name)
+    #        for v in lo_vbtm[x]:
+    #            print '\t\t' + v.Name
+    #    else:
+    #        print "No Template"
+    #        for v in lo_vbtm[x]:
+    #            print '\t\t' + v.Name
     print '======================================'
-    print '======================================'
-    print '======================================'
-    for x in views:
-        for k in oldNewNames.keys():
-            if x[1].find(k) > -1:
-                print "{} found at {} and is going to be{}".format(k,x[0].Name, x[0].Name.replace(k,oldNewNames[k]))
+    vt = [k for k in lo_vbtm.keys()]
+    vpfx = get_viewName_prefix_byTemplate(vt)
+    for x in vpfx:
+        print "Views with {} Template are going to be prefixed with {}_".format(x[0],x[1])
+
+    #for x in views:
+    #    for k in oldNewNames.keys():
+    #        if x[1].find(k) > -1:
+    #            print "{} found at {} and is going to be{}".format(k,x[0].Name, x[0].Name.replace(k,oldNewNames[k]))
 
 # -----------------------------
 mainfunction()
