@@ -29,67 +29,17 @@ def collect_level_elements():
     return_elements =list(levels_collector.ToElements())
     return return_elements
 #------------------------------
-def collect_level_info():
-# Creating collector instance and collecting all levels from the model, sorting by elevation
-    rdata = []
-    gf = []
-    levels_above_gf=[]
-    levels_below_gf=[]
-    ##
+def get_view_templates():
     levels_collector = DB.FilteredElementCollector(doc)
-    levels_collector.OfCategory(DB.BuiltInCategory.OST_Levels)
+    levels_collector.OfCategory(DB.BuiltInCategory.OST_Views)
     levels_collector.WhereElementIsNotElementType()
-    #
-    for level in levels_collector:
-        elevation = round(jt_FromIntUnits(level.Elevation),6)
-        name = level.Name
-        if (elevation == 0.0):
-            gf.append([name,elevation])
-        elif (elevation > 0.0):
-            levels_above_gf.append([name,elevation])
-        else:
-            levels_below_gf.append([name,elevation])
-    return levels_below_gf,gf,levels_above_gf
-#------------------------------
-def rename_above_gf_levels(levels):
-    sorted_levels = sorted(levels , key = lambda x: x[1])
-    level_names = []
-    for index,level in enumerate(sorted_levels,1):
-        newLevel = 'F-' + str(index).zfill(2)
-        level_names.append([level[0],newLevel])
-    return level_names
-#------------------------------
-def rename_below_gf_levels(levels):
-    sorted_levels = sorted(levels , key = lambda x: x[1])
-    sorted_levels.reverse()
-    level_names = []
-    for index,level in enumerate(sorted_levels,1):
-        newLevel = 'B-' + str(index).zfill(2)
-        level_names.append([level[0],newLevel])
-    return level_names
-#------------------------------
-def get_levels_to_skip(levels):
-    ops = []
-    for level in levels:
-        ops.append(level)
-    res = forms.SelectFromList.show(ops, multiselect=True, name_attr='Name',  button_name='Select Levels to Skip') 
-    return list(res)
-#------------------------------
-def get_mez_levels(levels):
-    ops = []
-    for level in levels:
-        ops.append(level)
-    res = forms.SelectFromList.show(ops, multiselect=True, name_attr='Name',  button_name='Select Mezzanine/Gallery Levels') 
-    return list(res)
-#------------------------------
-def LevelRename(newNames):
-    for x in newNames:
-        print ("{} is going to change to \t{}\t\t at Elevation {}".format(x[0].Name,x[1],round(jt_FromIntUnits(x[0].Elevation),4)))
-    t = Transaction(doc,"Renaming Levels")
-    t.Start()
-    for x in newNames:
-        x[0].Name = x[1]
-    t.Commit()
+    views = levels_collector.ToElements()
+    viewTemplates = []
+    for x in views :
+        if (x.IsTemplate):
+            viewTemplates.append(x)
+    return viewTemplates
+
 #------------------------------
 def select_views_with_associated_levels ():
     views_collector = DB.FilteredElementCollector(doc)
@@ -132,57 +82,8 @@ def get_viewName_prefix_byTemplate(templates):
     res = MultipleTextInput("Add view prefix according to template :", templatePrefix )
     return list(res)
 #------------------------------
-def MultipleTextInput(title, buttonNamesValues , default=None, description=None, sort=True, exit_on_close=True ,  ):
-  components = []
-  rvalues = []
-  for b in buttonNamesValues:
-    
-    label = Label("Template_"+ b)
-    textbox = TextBox(b, default=b )
-    components.append(label)
-    components.append(textbox)
-    rvalues.append(b)
-  components.append(Button('Select'))
-  form = FlexForm(title, components)
-  ok = form.show()
-  if ok:
-    a =  []
-    for x in buttonNamesValues:
-      a.append([x,form.values[x]])
-    return a
-  if exit_on_close:
-    sys.exit()
 
-#------------------------------
 
-def get_levels_newNames():
-    levels  = collect_level_elements()
-    skip = get_levels_to_skip(levels)
-    galeries = get_mez_levels(levels)
-    levels.sort(key = lambda x :  round(jt_FromIntUnits(x.Elevation),4))
-    gfIndex = -1
-    for i,level in enumerate(levels):
-        if round(jt_FromIntUnits(level.Elevation) , 3)  == 0.0:
-            gfIndex = i
-    number_of_below_ground = gfIndex
-    newNames = []
-    index = 0
-    while number_of_below_ground > 0:
-        newNames.append([levels[index] , 'B-' + str(number_of_below_ground).zfill(2)])
-        number_of_below_ground -= 1
-        index +=1
-    newNames.append([levels[gfIndex],'GF'])
-    index = 0
-    for x in levels[gfIndex+1:]:
-        if x in galeries:
-            if index == 0 :
-                newNames.append([x  , 'GF-G'])
-            else :
-                newNames.append([x  ,  'F-' + str(index).zfill(2) + 'G'])
-        else :
-                index +=1
-                newNames.append([x,'F-'+ str(index).zfill(2)])
-    return newNames
 #------------------------------
 #------------------------------
 
